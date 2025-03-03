@@ -255,6 +255,7 @@ export default function DashboardPage() {
         formState: { errors, isValid },
         reset,
         setValue,
+        watch,
     } = useForm<CreateExamFormValues>({
         resolver: zodResolver(CreateExamSchema),
         mode: "onChange",
@@ -266,6 +267,15 @@ export default function DashboardPage() {
             questions: [],
         },
     });
+
+    // Log inputs and errors
+    useEffect(() => {
+        const subscription = watch((value) => {
+            console.log('Form Inputs:', value);
+            console.log('Validation Errors:', errors);
+        });
+        return () => subscription.unsubscribe();
+    }, [errors]);
 
     // Initialize chart
     useEffect(() => {
@@ -377,6 +387,7 @@ export default function DashboardPage() {
 
                 if (validationResult.success) {
                     setImportedQuestions(validationResult.data);
+                    setValue('questions', validationResult.data);
                     setImportError(null);
 
                     // Display success toast
@@ -439,6 +450,9 @@ export default function DashboardPage() {
 
         // Show success toast
         displayToast("Exam created successfully!", "success");
+
+        console.log('Imported Questions:', importedQuestions);
+        console.log('New Exam:', newExam);
     };
 
     // Helper function to display toast

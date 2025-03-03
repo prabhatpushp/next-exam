@@ -1,0 +1,27 @@
+[
+    {
+        "question": "What is the capital of France?",
+        "option_1": "Berlin",
+        "option_2": "Madrid",
+        "option_3": "Paris",
+        "option_4": "Lisbon",
+        "correct_answer": "Paris",
+        "question_year": "2023"
+    },
+    {
+        "question": "Which planet is known as the Red Planet?",
+        "option_1": "Earth",
+        "option_2": "Mars",
+        "option_3": "Jupiter",
+        "option_4": "Saturn",
+        "correct_answer": "Mars"
+    },
+    {
+        "question": "What is the largest ocean on Earth?",
+        "option_1": "Atlantic Ocean",
+        "option_2": "Indian Ocean",
+        "option_3": "Arctic Ocean",
+        "option_4": "Pacific Ocean",
+        "correct_answer": "Pacific Ocean"
+    }
+]
