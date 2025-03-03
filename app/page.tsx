@@ -392,17 +392,17 @@ export default function DashboardPage() {
                             <FiPlus size={18} />
                             <span>Create New Exam</span>
                         </button>
-                        <button className="p-2.5 bg-white text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 transition-all border border-gray-200">
+                        {/* <button className="p-2.5 bg-white text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 transition-all border border-gray-200">
                             <FiSliders size={20} />
                         </button>
                         <button className="p-2.5 bg-white text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 transition-all border border-gray-200">
                             <FiSettings size={20} />
-                        </button>
+                        </button> */}
                     </div>
                 </div>
 
                 {/* Stats Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-medium text-gray-700">Total Exams</h3>
@@ -446,7 +446,7 @@ export default function DashboardPage() {
                         <div className="text-3xl font-bold text-gray-900">{totalBookmarks}</div>
                         <div className="text-sm text-gray-500 mt-2">Saved questions</div>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Search and Filter Bar */}
                 <div className="bg-white rounded-xl shadow-sm p-5 mb-8 border border-gray-100">
@@ -501,7 +501,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Study Progress Section */}
-                <div className="mb-12">
+                {/* <div className="mb-12">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-xl font-bold text-gray-900">Study Progress</h2>
                         <button className="text-sm text-gray-700 flex items-center bg-white px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">
@@ -535,7 +535,7 @@ export default function DashboardPage() {
                             <canvas ref={chartRef}></canvas>
                         </div>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Question Papers Section */}
                 <div className="mb-12">
