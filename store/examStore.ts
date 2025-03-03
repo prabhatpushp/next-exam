@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { examData } from '@/data/examData';
 import { sidebarData } from '@/data/sidebarData';
+import { Exam } from '@/types/examTypes';
 
 export type Question = {
     id: string;
@@ -10,17 +11,11 @@ export type Question = {
     category: string;
 };
 
-export type ExamData = {
-    examName: string;
-    examTime: number; // minutes
-    questions: Question[];
-};
-
 export type Screen = 'start' | 'exam' | 'results';
 
 interface ExamState {
     currentScreen: Screen;
-    examData: ExamData;
+    examData: Exam;
     sidebarData: any;
     sidebarVisible: boolean;
     currentQuestion: number;
@@ -44,7 +39,7 @@ interface ExamState {
     } | null;
 
     // Actions
-    initExam: () => void;
+    initExam: (exam: Exam) => void;
     startExam: () => void;
     toggleSidebar: (show?: boolean) => void;
     submitAnswer: (answer: string) => void;
@@ -56,9 +51,23 @@ interface ExamState {
     updateQuestionTime: (time: number) => void;
 }
 
+const initialExamData: Exam = {
+    id: Date.now().toString(36) + Math.random().toString(36).substring(2), // Simple ID generation
+    name: 'Default Exam', // Provide a default name
+    subject: 'Default Subject', // Provide a default subject
+    category: 'Default Category', // Provide a default category
+    timeLimit: 60, // Default time limit
+    questions: [], // Initialize with an empty array
+    createdAt: Date.now(),
+    totalAttempts: 0,
+    bestScore: 0,
+    avgScore: 0,
+    isBookmarked: false,
+};
+
 export const useExamStore = create<ExamState>((set, get) => ({
     currentScreen: 'start',
-    examData: examData,
+    examData: initialExamData,
     sidebarData: sidebarData,
     sidebarVisible: true,
     currentQuestion: 0,
@@ -71,20 +80,24 @@ export const useExamStore = create<ExamState>((set, get) => ({
     timeRemaining: 0,
     results: null,
 
-    initExam: () => {
-        const { examData } = get();
+    initExam: (exam: Exam) => {
+        if (!exam || !exam.questions || !Array.isArray(exam.questions)) {
+            console.error('Invalid exam object:', exam);
+            return;
+        }
         set({
-            userAnswers: Array(examData.questions.length).fill(null),
-            skippedQuestions: Array(examData.questions.length).fill(false),
-            questionTimes: Array(examData.questions.length).fill(0),
-            questionStartTimes: Array(examData.questions.length).fill(null),
-            timeRemaining: examData.examTime * 60, // convert to seconds
+            examData: exam,
+            userAnswers: Array(exam.questions.length).fill(null),
+            skippedQuestions: Array(exam.questions.length).fill(false),
+            questionTimes: Array(exam.questions.length).fill(0),
+            questionStartTimes: Array(exam.questions.length).fill(null),
+            timeRemaining: exam.timeLimit * 60,
         });
     },
 
     startExam: () => {
-        const { initExam } = get();
-        initExam();
+        const { initExam, examData } = get();
+        initExam(examData);
 
         const questionStartTimes = [...get().questionStartTimes];
         questionStartTimes[0] = new Date();

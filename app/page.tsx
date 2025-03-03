@@ -260,6 +260,8 @@ export default function DashboardPage() {
 
     // Handle form submission for creating a new exam
     const onSubmit = (data: CreateExamFormValues) => {
+        console.log('Imported Questions:', importedQuestions); // Log the imported questions
+
         // Transform the imported questions to the right format
         const formattedQuestions: Question[] = importedQuestions.map((q) => ({
             id: generateId(),

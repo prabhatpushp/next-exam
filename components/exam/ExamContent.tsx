@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { FiArrowLeft, FiArrowRight, FiCheck, FiClock, FiSkipForward } from "react-icons/fi";
 import { useExamStore } from "@/store/examStore";
 import { useTimer } from "@/hooks/useTimer";
@@ -7,7 +7,7 @@ import PaginationDots from "./PaginationDots";
 import QuestionOption from "./QuestionOption";
 
 const ExamContent: React.FC = () => {
-    const { examData, currentQuestion, userAnswers, skippedQuestions, navigateToQuestion, submitAnswer, skipQuestion, submitExam } = useExamStore();
+    const { examData, currentQuestion, userAnswers, skippedQuestions, navigateToQuestion, submitAnswer, skipQuestion, submitExam, sidebarVisible } = useExamStore();
 
     const { formattedTime, status: timerStatus } = useTimer();
     const { elapsedTime } = useQuestionTimer();
@@ -16,6 +16,12 @@ const ExamContent: React.FC = () => {
     const isLastQuestion = currentQuestion === examData.questions.length - 1;
     const isFirstQuestion = currentQuestion === 0;
     const hasAnswer = userAnswers[currentQuestion] !== null || skippedQuestions[currentQuestion];
+
+    useEffect(() => {
+        if (!sidebarVisible) {
+            // Logic to handle sidebar visibility if needed
+        }
+    }, [sidebarVisible]);
 
     return (
         <div className="flex-1 flex flex-col">

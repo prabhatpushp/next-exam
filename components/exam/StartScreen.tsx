@@ -1,8 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useExamStore } from "@/store/examStore";
 
 const StartScreen: React.FC = () => {
-    const { examData, startExam } = useExamStore();
+    const { examData, startExam, sidebarVisible } = useExamStore();
+
+    useEffect(() => {
+        if (!sidebarVisible) {
+            // Logic to handle sidebar visibility if needed
+        }
+    }, [sidebarVisible]);
 
     return (
         <div className="flex-1 flex flex-col items-center justify-center p-8">
@@ -21,7 +27,7 @@ const StartScreen: React.FC = () => {
                         </div>
                         <div className="h-12 w-px bg-gray-200"></div>
                         <div className="flex flex-col items-center">
-                            <span className="text-2xl font-semibold text-gray-800 mb-1">{examData.examTime}</span>
+                            <span className="text-2xl font-semibold text-gray-800 mb-1">{examData.timeLimit}</span>
                             <span>Minutes</span>
                         </div>
                     </div>

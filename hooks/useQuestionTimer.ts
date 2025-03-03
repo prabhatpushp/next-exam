@@ -9,21 +9,21 @@ export const useQuestionTimer = () => {
         currentScreen
     } = useExamStore();
 
-    const [elapsedTime, setElapsedTime] = useState(questionTimes[currentQuestion] || 0);
+    const elapsedTimeRef = useRef(questionTimes[currentQuestion] || 0);
+    const [elapsedTime, setElapsedTime] = useState(elapsedTimeRef.current);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
-        setElapsedTime(questionTimes[currentQuestion] || 0);
+        elapsedTimeRef.current = questionTimes[currentQuestion] || 0;
+        setElapsedTime(elapsedTimeRef.current);
     }, [currentQuestion, questionTimes]);
 
     useEffect(() => {
         if (currentScreen === 'exam') {
             timerRef.current = setInterval(() => {
-                setElapsedTime(prev => {
-                    const newTime = prev + 1;
-                    updateQuestionTime(newTime);
-                    return newTime;
-                });
+                elapsedTimeRef.current += 1;
+                setElapsedTime(Math.round(elapsedTimeRef.current));
+                updateQuestionTime(elapsedTimeRef.current);
             }, 1000);
 
             return () => {
@@ -32,7 +32,7 @@ export const useQuestionTimer = () => {
                 }
             };
         }
-    }, [currentQuestion, currentScreen, updateQuestionTime]);
+    }, [currentScreen, updateQuestionTime]);
 
     return {
         elapsedTime: Math.round(elapsedTime),
