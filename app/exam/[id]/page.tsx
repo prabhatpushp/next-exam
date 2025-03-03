@@ -47,23 +47,21 @@ export default function Page() {
 
     return (
         <div className="flex h-screen bg-gray-100 relative">
-            {/* Sidebar Toggle Button */}
-            <button onClick={() => toggleSidebar()} className="sidebar-toggle absolute top-3 left-3 z-10 bg-white shadow-sm p-2 rounded-md">
-                <FiMenu className="h-5 w-5 text-gray-500" />
-            </button>
 
             {/* Main Container */}
-            <div className="flex flex-1 relative">
+            <div className="flex flex-1 flex-col overflow-y-auto">
                 {/* Sidebar */}
-                <Sidebar visible={sidebarVisible} />
+                    <Header />
 
                 {/* Main Content */}
-                <div className="flex-1 flex flex-col">
-                    <Header />
+                <div className="flex-1 flex">
+
+                <Sidebar visible={sidebarVisible} />
 
                     {currentScreen === "start" && <StartScreen />}
                     {currentScreen === "exam" && <ExamContent />}
                     {currentScreen === "results" && <ResultsScreen />}
+                   
                 </div>
             </div>
         </div>

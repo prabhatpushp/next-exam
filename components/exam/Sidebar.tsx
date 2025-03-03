@@ -10,12 +10,9 @@ const Sidebar: React.FC<SidebarProps> = ({ visible }) => {
     const { sidebarData, toggleSidebar } = useExamStore();
 
     return (
-        <div className={`sidebar bg-white w-64 flex-shrink-0 h-screen overflow-y-auto transition-all duration-300 ease-in-out transform ${visible ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className={`sidebar bg-white w-64 flex-shrink-0 overflow-y-auto transition-all duration-300 ease-in-out transform ${visible ? "translate-x-0" : "-translate-x-full -ml-64"}`}>
             <div className="p-5">
                 <div className="flex items-center mb-5">
-                    <button onClick={() => toggleSidebar(false)} className="text-gray-400 hover:text-gray-600 mr-3">
-                        <FiX className="h-5 w-5" />
-                    </button>
                     <h1 className="text-lg font-semibold text-gray-800">How to Budget and Forecast for Your Business</h1>
                 </div>
 
