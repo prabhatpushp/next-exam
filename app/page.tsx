@@ -74,14 +74,15 @@ const formatDate = (timestamp: number) => {
 };
 
 // Helper function to format time
-const formatTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
+const formatTime = (seconds: number) => {
+    const roundedSecond = Math.round(seconds);
+    const minutes = Math.floor(roundedSecond / 60);
+    const remainingSeconds = roundedSecond % 60;
 
-    if (hours > 0) {
-        return `${hours}h ${mins}m`;
+    if (minutes > 0) {
+        return `${minutes}m ${remainingSeconds}s`;
     }
-    return `${mins} minutes`;
+    return `${remainingSeconds} seconds`;
 };
 
 export default function DashboardPage() {
@@ -99,8 +100,7 @@ export default function DashboardPage() {
     const chartInstance = useRef<Chart | null>(null);
 
     // Get data from store
-    const { exams, attempts, bookmarkedQuestions, searchQuery, sortBy, setSearchQuery, setSortBy, addExam, bookmarkExam, unbookmarkExam, removeBookmarkedQuestion, removeExam } =
-        useDashboardStore();
+    const { exams, attempts, bookmarkedQuestions, searchQuery, sortBy, setSearchQuery, setSortBy, addExam, bookmarkExam, unbookmarkExam, removeBookmarkedQuestion, removeExam } = useDashboardStore();
 
     // React Hook Form
     const {
@@ -230,7 +230,7 @@ export default function DashboardPage() {
 
                 if (validationResult.success) {
                     setImportedQuestions(validationResult.data);
-                    setValue('questions', validationResult.data);
+                    setValue("questions", validationResult.data);
                     setImportError(null);
 
                     // Display success toast
@@ -351,23 +351,23 @@ export default function DashboardPage() {
     // Get category tag colors
     const getCategoryColor = (category: string) => {
         switch (category.toLowerCase()) {
-            case 'exam':
-                return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'quiz':
-                return 'bg-green-100 text-green-800 border-green-200';
-            case 'practice':
-                return 'bg-purple-100 text-purple-800 border-purple-200';
+            case "exam":
+                return "bg-blue-100 text-blue-800 border-blue-200";
+            case "quiz":
+                return "bg-green-100 text-green-800 border-green-200";
+            case "practice":
+                return "bg-purple-100 text-purple-800 border-purple-200";
             default:
-                return 'bg-gray-100 text-gray-800 border-gray-200';
+                return "bg-gray-100 text-gray-800 border-gray-200";
         }
     };
 
     // Get score color
     const getScoreColor = (score: number) => {
-        if (score >= 80) return 'text-green-600';
-        if (score >= 60) return 'text-blue-600';
-        if (score >= 40) return 'text-yellow-600';
-        return 'text-red-600';
+        if (score >= 80) return "text-green-600";
+        if (score >= 60) return "text-blue-600";
+        if (score >= 40) return "text-yellow-600";
+        return "text-red-600";
     };
 
     return (
@@ -561,14 +561,13 @@ export default function DashboardPage() {
                                             {exam.totalAttempts > 0 && (
                                                 <div className="mb-4">
                                                     <div className="flex justify-between items-center mb-1.5 text-xs">
-                                                        <span className="font-medium">Best Score: <span className={getScoreColor(exam.bestScore)}>{exam.bestScore}%</span></span>
+                                                        <span className="font-medium">
+                                                            Best Score: <span className={getScoreColor(exam.bestScore)}>{exam.bestScore}%</span>
+                                                        </span>
                                                         <span>Avg: {exam.avgScore}%</span>
                                                     </div>
                                                     <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                                        <div 
-                                                            className={`h-2 rounded-full ${getScoreColor(exam.bestScore).replace('text', 'bg')}`} 
-                                                            style={{ width: `${exam.bestScore}%` }}
-                                                        ></div>
+                                                        <div className={`h-2 rounded-full ${getScoreColor(exam.bestScore).replace("text", "bg")}`} style={{ width: `${exam.bestScore}%` }}></div>
                                                     </div>
                                                 </div>
                                             )}
@@ -576,14 +575,18 @@ export default function DashboardPage() {
                                             <div className="flex justify-between items-center">
                                                 <div className="flex -space-x-2">
                                                     {exam.totalAttempts > 0 && (
-                                                        <div className="w-7 h-7 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center border-2 border-white">{exam.avgScore}%</div>
+                                                        <div className="w-7 h-7 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center border-2 border-white">
+                                                            {exam.avgScore}%
+                                                        </div>
                                                     )}
                                                     {exam.totalAttempts > 1 && (
-                                                        <div className="w-7 h-7 rounded-full bg-green-500 text-white text-xs flex items-center justify-center border-2 border-white">+{exam.totalAttempts - 1}</div>
+                                                        <div className="w-7 h-7 rounded-full bg-green-500 text-white text-xs flex items-center justify-center border-2 border-white">
+                                                            +{exam.totalAttempts - 1}
+                                                        </div>
                                                     )}
                                                 </div>
-                                                <button 
-                                                    onClick={() => router.push(`/exam/${exam.id}`)} 
+                                                <button
+                                                    onClick={() => router.push(`/exam/${exam.id}`)}
                                                     className="text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                                                 >
                                                     Start Exam
@@ -599,19 +602,13 @@ export default function DashboardPage() {
                             <FiFileText className="h-16 w-16 mx-auto text-gray-300 mb-4" />
                             <h3 className="text-xl font-medium text-gray-700 mb-2">No exams found</h3>
                             <p className="text-gray-500 max-w-md mx-auto mb-6">
-                                {searchQuery
-                                    ? "No exams match your search criteria. Try adjusting your filters."
-                                    : "Create your first exam by clicking the 'Create New Exam' button."}
+                                {searchQuery ? "No exams match your search criteria. Try adjusting your filters." : "Create your first exam by clicking the 'Create New Exam' button."}
                             </p>
-                            <button 
-                                onClick={() => setShowCreateModal(true)} 
-                                className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg shadow-sm hover:bg-indigo-700 transition-all font-medium"
-                            >
+                            <button onClick={() => setShowCreateModal(true)} className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg shadow-sm hover:bg-indigo-700 transition-all font-medium">
                                 Create New Exam
                             </button>
                         </div>
                     )}
-                
                 </div>
 
                 {/* Recent Attempts */}
@@ -661,26 +658,28 @@ export default function DashboardPage() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${
-                                                        attempt.score >= 80 ? 'bg-green-100 text-green-800' : 
-                                                        attempt.score >= 60 ? 'bg-blue-100 text-blue-800' : 
-                                                        attempt.score >= 40 ? 'bg-yellow-100 text-yellow-800' : 
-                                                        'bg-red-100 text-red-800'
-                                                    }`}>
+                                                    <div
+                                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${
+                                                            attempt.score >= 80
+                                                                ? "bg-green-100 text-green-800"
+                                                                : attempt.score >= 60
+                                                                ? "bg-blue-100 text-blue-800"
+                                                                : attempt.score >= 40
+                                                                ? "bg-yellow-100 text-yellow-800"
+                                                                : "bg-red-100 text-red-800"
+                                                        }`}
+                                                    >
                                                         {attempt.score}%
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                                     <div className="flex items-center">
                                                         <FiClock className="h-4 w-4 mr-1.5 text-gray-400" />
-                                                        {attempt.timeSpent} minutes
+                                                        {formatTime(attempt.timeSpent)}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                    <button 
-                                                        onClick={() => router.push(`/results/${attempt.id}`)} 
-                                                        className="flex items-center text-indigo-600 hover:text-indigo-800 font-medium"
-                                                    >
+                                                    <button onClick={() => router.push(`/results/${attempt.id}`)} className="flex items-center text-indigo-600 hover:text-indigo-800 font-medium">
                                                         <FiEye className="h-4 w-4 mr-1" />
                                                         View
                                                     </button>
@@ -715,17 +714,15 @@ export default function DashboardPage() {
                                 <div key={bookmark.id} className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-yellow-400">
                                     <div className="flex justify-between items-start mb-3">
                                         <div className="flex items-center space-x-2">
-                                            <span className="text-sm font-medium text-gray-800 bg-gray-100 px-3 py-1 rounded-lg border border-gray-200">
-                                                {bookmark.examName}
-                                            </span>
+                                            <span className="text-sm font-medium text-gray-800 bg-gray-100 px-3 py-1 rounded-lg border border-gray-200">{bookmark.examName}</span>
                                             {/* {bookmark.question.year && 
                                                 <span className="text-xs bg-yellow-100 text-yellow-800 px-2.5 py-1 rounded-full border border-yellow-200">
                                                     {bookmark.question.year}
                                                 </span>
                                             } */}
                                         </div>
-                                        <button 
-                                            onClick={() => removeBookmarkedQuestion(bookmark.id)} 
+                                        <button
+                                            onClick={() => removeBookmarkedQuestion(bookmark.id)}
                                             className="text-yellow-500 hover:text-yellow-600 p-1.5 bg-yellow-50 rounded-full border border-yellow-200"
                                         >
                                             <FiBookmark className="h-4 w-4 fill-yellow-500" />
@@ -757,10 +754,7 @@ export default function DashboardPage() {
                         <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full mx-auto p-6 max-h-[90vh] overflow-y-auto">
                             <div className="flex justify-between items-start mb-6">
                                 <h2 className="text-xl font-bold text-gray-900">Create New Exam</h2>
-                                <button 
-                                    onClick={() => setShowCreateModal(false)} 
-                                    className="text-gray-500 hover:text-gray-700 p-1.5 bg-gray-100 rounded-full"
-                                >
+                                <button onClick={() => setShowCreateModal(false)} className="text-gray-500 hover:text-gray-700 p-1.5 bg-gray-100 rounded-full">
                                     <FiX className="h-5 w-5" />
                                 </button>
                             </div>
@@ -819,11 +813,7 @@ export default function DashboardPage() {
                                         <div className="flex justify-between items-center mb-1.5">
                                             <label className="block text-sm font-medium text-gray-700">Upload Questions (JSON)</label>
                                             {importedQuestions.length > 0 && (
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => setShowAnswers(!showAnswers)}
-                                                    className="text-xs flex items-center text-indigo-600 hover:text-indigo-800"
-                                                >
+                                                <button type="button" onClick={() => setShowAnswers(!showAnswers)} className="text-xs flex items-center text-indigo-600 hover:text-indigo-800">
                                                     {showAnswers ? (
                                                         <>
                                                             <FiEyeOff className="h-3.5 w-3.5 mr-1" />
@@ -845,10 +835,7 @@ export default function DashboardPage() {
                                             <FiUpload className="h-12 w-12 mx-auto text-gray-400 mb-3" />
                                             <p className="text-gray-700 mb-2">Drag and drop your JSON file here</p>
                                             <p className="text-gray-500 text-sm mb-3">or</p>
-                                            <button 
-                                                type="button" 
-                                                className="px-4 py-2.5 bg-indigo-600 text-white rounded-lg shadow-sm hover:bg-indigo-700 transition-all inline-block font-medium"
-                                            >
+                                            <button type="button" className="px-4 py-2.5 bg-indigo-600 text-white rounded-lg shadow-sm hover:bg-indigo-700 transition-all inline-block font-medium">
                                                 Browse Files
                                             </button>
                                             <input type="file" ref={fileInputRef} accept=".json" className="hidden" onChange={handleFileUpload} />
@@ -898,9 +885,9 @@ export default function DashboardPage() {
                                 </div>
 
                                 <div className="flex justify-end space-x-3">
-                                    <button 
-                                        type="button" 
-                                        onClick={() => setShowCreateModal(false)} 
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCreateModal(false)}
                                         className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-medium"
                                     >
                                         Cancel
@@ -921,27 +908,19 @@ export default function DashboardPage() {
                 )}
 
                 {/* Toast Notification */}
-                <div 
-                    className={`fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 transition-all transform ${
-                        showToast ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"
-                    } border ${toastType === "success" ? "border-green-100" : "border-red-100"} max-w-md`}
+                <div
+                    className={`fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 transition-all transform ${showToast ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"} border ${
+                        toastType === "success" ? "border-green-100" : "border-red-100"
+                    } max-w-md`}
                 >
                     <div className="flex items-center">
-                        <div className={`flex-shrink-0 mr-3 p-2 rounded-full ${
-                            toastType === "success" ? "bg-green-100" : "bg-red-100"
-                        }`}>
-                            {toastType === "success" ? 
-                                <FiCheck className="h-5 w-5 text-green-500" /> : 
-                                <FiAlertCircle className="h-5 w-5 text-red-500" />
-                            }
+                        <div className={`flex-shrink-0 mr-3 p-2 rounded-full ${toastType === "success" ? "bg-green-100" : "bg-red-100"}`}>
+                            {toastType === "success" ? <FiCheck className="h-5 w-5 text-green-500" /> : <FiAlertCircle className="h-5 w-5 text-red-500" />}
                         </div>
                         <div>
                             <p className="font-medium text-gray-900">{toastMessage}</p>
                         </div>
-                        <button 
-                            onClick={() => setShowToast(false)}
-                            className="ml-auto p-1 text-gray-400 hover:text-gray-600"
-                        >
+                        <button onClick={() => setShowToast(false)} className="ml-auto p-1 text-gray-400 hover:text-gray-600">
                             <FiX className="h-4 w-4" />
                         </button>
                     </div>
