@@ -12,7 +12,8 @@ export default {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+
     },
   },
-  plugins: [],
+  plugins: [require("@tailwindcss/typography")],
 } satisfies Config;

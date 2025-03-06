@@ -70,7 +70,6 @@ export const useDashboardStore = create<DashboardState>()(
 
             addAttempt: (attempt) =>
                 set((state) => {
-                    // Update exam statistics when adding a new attempt
                     const updatedExams = state.exams.map((exam) => {
                         if (exam.id === attempt.examId) {
                             const examAttempts = [...state.attempts, attempt].filter((a) => a.examId === exam.id);

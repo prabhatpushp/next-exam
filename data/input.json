@@ -1,11 +1,11 @@
 [
     {
-        "question": "What is the capital of France?",
-        "option_1": "Berlin",
-        "option_2": "Madrid",
-        "option_3": "Paris",
-        "option_4": "Lisbon",
-        "correct_answer": "Paris",
+        "question": "Marked - Markdown Parser\r\n========================\r\n\r\n[Marked] lets you convert [Markdown] into HTML.  Markdown is a simple text format whose goal is to be very easy to read and write, even when not converted to HTML.  This demo page will let you type anything you like and see how it gets converted.  Live.  No more waiting around.\r\n\r\nHow To Use The Demo\r\n-------------------\r\n\r\n1. Type in stuff on the left.\r\n2. See the live updates on the right.\r\n\r\nThat's it.  Pretty simple.  There's also a drop-down option above to switch between various views:\r\n\r\n- **Preview:**  A live display of the generated HTML as it would render in a browser.\r\n- **HTML Source:**  The generated HTML before your browser makes it pretty.\r\n- **Lexer Data:**  What [marked] uses internally, in case you like gory stuff like this.\r\n- **Quick Reference:**  A brief run-down of how to format things using markdown.\r\n\r\nWhy Markdown?\r\n-------------\r\n\r\nIt's easy.  It's not overly bloated, unlike HTML.  Also, as the creator of [markdown] says,\r\n\r\n> The overriding design goal for Markdown's\r\n> formatting syntax is to make it as readable\r\n> as possible. The idea is that a\r\n> Markdown-formatted document should be\r\n> publishable as-is, as plain text, without\r\n> looking like it's been marked up with tags\r\n> or formatting instructions.\r\n\r\nReady to start writing?  Either start changing stuff on the left or\r\n[clear everything](/demo/?text=) with a simple click.\r\n\r\n[Marked]: https://github.com/markedjs/marked/\r\n[Markdown]: http://daringfireball.net/projects/markdown/\r\n",
+        "option_1": "Berlin\n- Capital of Germany\n- Known for its art scene",
+        "option_2": "Madrid\n- Capital of Spain\n- Famous for its Royal Palace",
+        "option_3": "**Paris**\n- *Capital of France*\n- Known for its art, fashion, and culture",
+        "option_4": "Lisbon\n- Capital of Portugal\n- Famous for its hilly landscape",
+        "correct_answer": "option_3",
         "question_year": "2023"
     },
     {
@@ -14,7 +14,7 @@
         "option_2": "Mars",
         "option_3": "Jupiter",
         "option_4": "Saturn",
-        "correct_answer": "Mars"
+        "correct_answer": "option_2"
     },
     {
         "question": "What is the largest ocean on Earth?",
@@ -22,6 +22,6 @@
         "option_2": "Indian Ocean",
         "option_3": "Arctic Ocean",
         "option_4": "Pacific Ocean",
-        "correct_answer": "Pacific Ocean"
+        "correct_answer": "option_4"
     }
 ]

@@ -9,32 +9,31 @@ export const useQuestionTimer = () => {
         currentScreen
     } = useExamStore();
 
-    const elapsedTimeRef = useRef(questionTimes[currentQuestion] || 0);
-    const [elapsedTime, setElapsedTime] = useState(elapsedTimeRef.current);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const elapsedTimeRef = useRef(new Array(questionTimes.length).fill(0));
+    const [elapsedTimes, setElapsedTimes] = useState(elapsedTimeRef.current);
+    const timerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
     useEffect(() => {
-        elapsedTimeRef.current = questionTimes[currentQuestion] || 0;
-        setElapsedTime(elapsedTimeRef.current);
-    }, [currentQuestion, questionTimes]);
-
-    useEffect(() => {
-        if (currentScreen === 'exam') {
-            timerRef.current = setInterval(() => {
-                elapsedTimeRef.current += 1;
-                setElapsedTime(Math.round(elapsedTimeRef.current));
-                updateQuestionTime(elapsedTimeRef.current);
-            }, 1000);
-
-            return () => {
-                if (timerRef.current) {
-                    clearInterval(timerRef.current);
-                }
-            };
+        // Pause the timer for the previous question
+        if (timerRef.current !== undefined) {
+            clearInterval(timerRef.current);
+            updateQuestionTime(elapsedTimeRef.current[currentQuestion]);
         }
-    }, [currentScreen, updateQuestionTime]);
+
+        // Start the timer for the current question
+        timerRef.current = setInterval(() => {
+            elapsedTimeRef.current[currentQuestion] += 1;
+            setElapsedTimes([...elapsedTimeRef.current]);
+        }, 1000);
+
+        return () => {
+            // Clear the timer on unmount or when changing questions
+            clearInterval(timerRef.current);
+            updateQuestionTime(elapsedTimeRef.current[currentQuestion]);
+        };
+    }, [currentQuestion, updateQuestionTime]);
 
     return {
-        elapsedTime: Math.round(elapsedTime),
+        elapsedTimes,
     };
 };

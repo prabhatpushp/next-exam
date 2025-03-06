@@ -1,4 +1,3 @@
-
 // Types
 type Question = {
     id: string;
@@ -30,6 +29,7 @@ type ExamAttempt = {
     timeSpent: number;
     answeredQuestions: number;
     totalQuestions: number;
+    submittedAnswers: { questionId: string; answer: string | null }[];
 };
 
 type BookmarkedQuestion = {

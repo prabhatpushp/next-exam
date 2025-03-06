@@ -6,16 +6,20 @@ import { useTimer } from "@/hooks/useTimer";
 import { useQuestionTimer } from "@/hooks/useQuestionTimer";
 import PaginationDots from "./PaginationDots";
 import QuestionOption from "./QuestionOption";
-import DOMPurify from "dompurify";
-import { marked } from "marked";
+import MarkdownContent from "./MarkdownContent";
 
-const MarkdownContent = memo(({ content }: { content: string }) => {
+const QuestionTimer = () => {
+    const { currentQuestion } = useExamStore();
+    const { elapsedTimes } = useQuestionTimer();
+    // Display the elapsed time for the current question
+    const currentElapsedTime = elapsedTimes[currentQuestion];
+
     return (
-        <div className="markdown-content">
-            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(content)) }}></div>
+        <div className="text-sm text-gray-600 mb-6">
+            Time spent on this question: <span>{currentElapsedTime}</span> seconds
         </div>
     );
-});
+};
 
 const ExamContent: React.FC = () => {
     const { examData, currentQuestion, userAnswers, skippedQuestions, navigateToQuestion, submitAnswer, skipQuestion, submitExam, sidebarVisible } = useExamStore();
@@ -26,7 +30,6 @@ const ExamContent: React.FC = () => {
     const isLastQuestion = currentQuestion === examData.questions.length - 1;
     const isFirstQuestion = currentQuestion === 0;
     const hasAnswer = userAnswers[currentQuestion] !== null || skippedQuestions[currentQuestion];
-    const { elapsedTime } = useQuestionTimer();
 
     useEffect(() => {
         if (!sidebarVisible) {
@@ -59,9 +62,7 @@ const ExamContent: React.FC = () => {
 
                     <MarkdownContent content={question.question} />
 
-                    <div className="text-sm text-gray-600 mb-6">
-                        Time spent on this question: <span>{elapsedTime}</span> seconds
-                    </div>
+                    <QuestionTimer />
 
                     <form>
                         <div className="space-y-3">

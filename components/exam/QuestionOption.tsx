@@ -1,4 +1,5 @@
 import React from "react";
+import MarkdownContent from "./MarkdownContent";
 
 interface QuestionOptionProps {
     option: string;
@@ -27,7 +28,9 @@ const QuestionOption: React.FC<QuestionOptionProps> = ({ option, isSelected, isS
                         {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>}
                     </div>
                 </div>
-                <span className="ml-3 text-gray-700">{option}</span>
+                <span className="ml-3 text-gray-700">
+                    <MarkdownContent content={option} />
+                </span>
             </label>
         </div>
     );

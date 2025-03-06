@@ -4,10 +4,10 @@ import { useExamStore } from "@/store/examStore";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { BookmarkedQuestion, Question } from "@/types/examTypes";
 import { FaCheck, FaTimes, FaBookmark, FaRegBookmark, FaRedo, FaArrowLeft, FaClock, FaChartBar, FaRegClock, FaRegCheckCircle } from "react-icons/fa";
-
+import MarkdownContent from "./MarkdownContent";
 const ResultsScreen: React.FC = () => {
     const { examData, results, userAnswers, skippedQuestions, questionTimes, retakeExam } = useExamStore();
-    const { addBookmarkedQuestion, removeBookmarkedQuestion, bookmarkedQuestions } = useDashboardStore();
+    const { addBookmarkedQuestion, removeBookmarkedQuestion, bookmarkedQuestions, addAttempt } = useDashboardStore();
 
     // State to track bookmarked questions locally
     const [bookmarkedState, setBookmarkedState] = useState<Record<string, boolean>>({});
@@ -161,7 +161,7 @@ const ResultsScreen: React.FC = () => {
                                 font: {
                                     family: "'Inter', sans-serif",
                                     size: 12,
-                                    weight: "500",
+                                    weight: 500,
                                 },
                                 color: "#64748b",
                             },
@@ -201,6 +201,28 @@ const ResultsScreen: React.FC = () => {
             Object.values(chartInstancesRef.current).forEach((chart) => chart?.destroy());
         };
     }, [results, examData, questionTimes, userAnswers, skippedQuestions]);
+
+    useEffect(() => {
+        if (results) {
+            // Prepare the attempt data
+            const attemptData = {
+                id: `attempt-${Date.now()}`, // Unique ID for the attempt
+                examId: examData.id,
+                date: Date.now(),
+                score: results.percentage,
+                timeSpent: questionTimes.reduce((sum, time) => sum + time, 0), // Total time spent
+                answeredQuestions: results.correctCount + results.incorrectCount,
+                totalQuestions: examData.questions.length,
+                submittedAnswers: examData.questions.map((question, index) => ({
+                    questionId: question.id,
+                    answer: userAnswers[index] || null,
+                })),
+            };
+
+            // Add the attempt to the dashboard store
+            addAttempt(attemptData);
+        }
+    }, [results]);
 
     if (!results) return null;
 
@@ -456,7 +478,9 @@ const ResultsScreen: React.FC = () => {
                                         </div>
 
                                         <div className="p-4">
-                                            <p className="text-slate-800 mb-4">{question.question}</p>
+                                            <div className="text-slate-800 mb-4">
+                                                <MarkdownContent content={question.question} />
+                                            </div>
 
                                             {/* Options */}
                                             <div className="space-y-2 mb-2">
@@ -464,7 +488,7 @@ const ResultsScreen: React.FC = () => {
                                                     const isUserAnswer = userAnswers[index] === option;
                                                     const isCorrectAnswer = question.correct_answer === option;
 
-                                                    let optionClass = "p-3 rounded-md flex items-center text-sm";
+                                                    let optionClass = "p-3 rounded-md flex items-start text-sm";
 
                                                     if (isUserAnswer && isCorrectAnswer) {
                                                         // User selected correct answer
@@ -497,7 +521,7 @@ const ResultsScreen: React.FC = () => {
                                                                 {isUserAnswer && !isCorrectAnswer && <FaTimes className="text-xs text-red-700" />}
                                                                 {!isUserAnswer && isCorrectAnswer && <FaCheck className="text-xs text-green-700" />}
                                                             </div>
-                                                            {option}
+                                                            <MarkdownContent content={option} />
                                                         </div>
                                                     );
                                                 })}
