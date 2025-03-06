@@ -22,7 +22,7 @@ const QuestionOption: React.FC<QuestionOptionProps> = ({ option, isSelected, isS
     return (
         <div className={containerClasses} onClick={onSelect}>
             <label className="flex items-start w-full cursor-pointer">
-                <div className="relative flex items-center h-5">
+                <div className="relative flex items-center h-5 mt-1">
                     <input type="radio" className="opacity-0 absolute h-5 w-5" checked={isSelected} onChange={onSelect} />
                     <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${isSelected ? "border-blue-500" : "border-gray-300"}`}>
                         {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>}

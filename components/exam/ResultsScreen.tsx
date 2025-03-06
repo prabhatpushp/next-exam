@@ -5,6 +5,7 @@ import { useDashboardStore } from "@/store/dashboardStore";
 import { BookmarkedQuestion, Question } from "@/types/examTypes";
 import { FaCheck, FaTimes, FaBookmark, FaRegBookmark, FaRedo, FaArrowLeft, FaClock, FaChartBar, FaRegClock, FaRegCheckCircle } from "react-icons/fa";
 import MarkdownContent from "./MarkdownContent";
+import Link from "next/link";
 const ResultsScreen: React.FC = () => {
     const { examData, results, userAnswers, skippedQuestions, questionTimes, retakeExam } = useExamStore();
     const { addBookmarkedQuestion, removeBookmarkedQuestion, bookmarkedQuestions, addAttempt } = useDashboardStore();
@@ -404,14 +405,15 @@ const ResultsScreen: React.FC = () => {
                                     <FaRedo className="mr-2" size={14} />
                                     Retake Exam
                                 </button>
-
-                                <button
-                                    onClick={retakeExam} // In a real app, this would navigate back to the course
-                                    className="px-5 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 transition-all flex items-center justify-center"
-                                >
-                                    <FaArrowLeft className="mr-2" size={14} />
-                                    Back to Course
-                                </button>
+                                <Link href={"/"}>
+                                    <button
+                                        onClick={retakeExam} // In a real app, this would navigate back to the course
+                                        className="px-5 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 transition-all flex items-center justify-center"
+                                    >
+                                        <FaArrowLeft className="mr-2" size={14} />
+                                        Back to Course
+                                    </button>
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -507,7 +509,7 @@ const ResultsScreen: React.FC = () => {
                                                     return (
                                                         <div key={optIndex} className={optionClass}>
                                                             <div
-                                                                className={`w-5 h-5 rounded-full flex items-center justify-center mr-3 flex-shrink-0 ${
+                                                                className={`w-5 h-5 rounded-full flex items-center justify-center mr-3 flex-shrink-0 mt-1 ${
                                                                     isUserAnswer && isCorrectAnswer
                                                                         ? "bg-green-200"
                                                                         : isUserAnswer && !isCorrectAnswer
