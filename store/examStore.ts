@@ -55,7 +55,6 @@ const initialExamData: Exam = {
     id: Date.now().toString(36) + Math.random().toString(36).substring(2), // Simple ID generation
     name: 'Default Exam', // Provide a default name
     subject: 'Default Subject', // Provide a default subject
-    category: 'Default Category', // Provide a default category
     timeLimit: 60, // Default time limit
     questions: [], // Initialize with an empty array
     createdAt: Date.now(),
