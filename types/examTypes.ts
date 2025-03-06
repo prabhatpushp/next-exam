@@ -13,7 +13,6 @@ type Exam = {
     id: string;
     name: string;
     subject: string;
-    category: string;
     timeLimit: number;
     questions: Question[];
     createdAt: number;

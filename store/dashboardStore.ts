@@ -9,12 +9,10 @@ interface DashboardState {
     attempts: ExamAttempt[];
     bookmarkedQuestions: BookmarkedQuestion[];
     searchQuery: string;
-    filterCategory: string;
     sortBy: string;
 
     // Actions
     setSearchQuery: (query: string) => void;
-    setFilterCategory: (category: string) => void;
     setSortBy: (sortBy: string) => void;
     addExam: (exam: Exam) => void;
     removeExam: (id: string) => void;
@@ -33,11 +31,9 @@ export const useDashboardStore = create<DashboardState>()(
             attempts: [],
             bookmarkedQuestions: [],
             searchQuery: "",
-            filterCategory: "all",
             sortBy: "recent",
 
             setSearchQuery: (query) => set({ searchQuery: query }),
-            setFilterCategory: (category) => set({ filterCategory: category }),
             setSortBy: (sortBy) => set({ sortBy }),
 
             addExam: (exam) =>

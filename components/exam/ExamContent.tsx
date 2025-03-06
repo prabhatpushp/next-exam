@@ -1,16 +1,35 @@
-import React, { useEffect } from "react";
+"use client";
+import React, { useEffect, Suspense } from "react";
 import { FiArrowLeft, FiArrowRight, FiCheck, FiClock, FiSkipForward } from "react-icons/fi";
 import { useExamStore } from "@/store/examStore";
 import { useTimer } from "@/hooks/useTimer";
 import { useQuestionTimer } from "@/hooks/useQuestionTimer";
 import PaginationDots from "./PaginationDots";
 import QuestionOption from "./QuestionOption";
+import DOMPurify from "dompurify";
+import { marked } from "marked";
+
+const Timer = () => {
+    const { elapsedTime } = useQuestionTimer();
+    return (
+        <div className="text-sm text-gray-600 mb-6">
+            Time spent on this question: <span>{elapsedTime}</span> seconds
+        </div>
+    );
+};
+
+const MarkdownContent = ({ content }: { content: string }) => {
+    return (
+        <div className="markdown-content">
+            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(content)) }}></div>
+        </div>
+    );
+};
 
 const ExamContent: React.FC = () => {
     const { examData, currentQuestion, userAnswers, skippedQuestions, navigateToQuestion, submitAnswer, skipQuestion, submitExam, sidebarVisible } = useExamStore();
 
     const { formattedTime, status: timerStatus } = useTimer();
-    const { elapsedTime } = useQuestionTimer();
 
     const question = examData.questions[currentQuestion];
     const isLastQuestion = currentQuestion === examData.questions.length - 1;
@@ -46,11 +65,9 @@ const ExamContent: React.FC = () => {
                 <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-sm p-8">
                     <div className="text-sm text-gray-500 mb-3 font-medium">Multiple choice</div>
 
-                    <h2 className="text-xl font-semibold text-gray-800 mb-6">{question.question}</h2>
+                    <MarkdownContent content={question.question} />
 
-                    <div className="text-sm text-gray-600 mb-6">
-                        Time spent on this question: <span>{elapsedTime}</span> seconds
-                    </div>
+                    <Timer />
 
                     <form>
                         <div className="space-y-3">

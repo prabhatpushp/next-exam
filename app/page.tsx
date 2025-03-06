@@ -53,7 +53,6 @@ const ExamImportSchema = z.array(QuestionSchema);
 const CreateExamSchema = z.object({
     name: z.string().min(1, "Exam name is required"),
     subject: z.string().min(1, "Subject is required"),
-    category: z.string().min(1, "Category is required"),
     timeLimit: z.number().min(1, "Time limit must be at least 1 minute"),
     questions: z.array(QuestionSchema).min(1, "At least one question is required"),
 });
@@ -100,7 +99,7 @@ export default function DashboardPage() {
     const chartInstance = useRef<Chart | null>(null);
 
     // Get data from store
-    const { exams, attempts, bookmarkedQuestions, searchQuery, filterCategory, sortBy, setSearchQuery, setFilterCategory, setSortBy, addExam, bookmarkExam, unbookmarkExam, removeBookmarkedQuestion } =
+    const { exams, attempts, bookmarkedQuestions, searchQuery, sortBy, setSearchQuery, setSortBy, addExam, bookmarkExam, unbookmarkExam, removeBookmarkedQuestion, removeExam } =
         useDashboardStore();
 
     // React Hook Form
@@ -116,7 +115,6 @@ export default function DashboardPage() {
         defaultValues: {
             name: "",
             subject: "",
-            category: "Exam",
             timeLimit: 60,
             questions: [],
         },
@@ -275,7 +273,6 @@ export default function DashboardPage() {
             id: generateId(),
             name: data.name,
             subject: data.subject,
-            category: data.category,
             timeLimit: data.timeLimit,
             questions: formattedQuestions,
             createdAt: Date.now(),
@@ -314,11 +311,6 @@ export default function DashboardPage() {
         .filter((exam) => {
             // Apply search filter
             if (searchQuery && !exam.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-                return false;
-            }
-
-            // Apply category filter
-            if (filterCategory !== "all" && exam.category.toLowerCase() !== filterCategory.toLowerCase()) {
                 return false;
             }
 
@@ -467,21 +459,6 @@ export default function DashboardPage() {
                             <div className="relative">
                                 <select
                                     className="appearance-none pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                    value={filterCategory}
-                                    onChange={(e) => setFilterCategory(e.target.value)}
-                                >
-                                    <option value="all">All Categories</option>
-                                    <option value="exam">Exams</option>
-                                    <option value="quiz">Quizzes</option>
-                                    <option value="practice">Practice</option>
-                                </select>
-                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
-                                    <FiChevronDown className="h-4 w-4" />
-                                </div>
-                            </div>
-                            <div className="relative">
-                                <select
-                                    className="appearance-none pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value)}
                                 >
@@ -539,16 +516,6 @@ export default function DashboardPage() {
 
                 {/* Question Papers Section */}
                 <div className="mb-12">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-bold text-gray-900">Question Papers</h2>
-                        <div className="flex space-x-2">
-                            <button className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg shadow-sm">All</button>
-                            <button className="px-3 py-1.5 text-sm bg-white text-gray-700 rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50">Exams</button>
-                            <button className="px-3 py-1.5 text-sm bg-white text-gray-700 rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50">Quizzes</button>
-                            <button className="px-3 py-1.5 text-sm bg-white text-gray-700 rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50">Practice</button>
-                        </div>
-                    </div>
-
                     {filteredExams.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {filteredExams.map((exam) => {
@@ -556,22 +523,26 @@ export default function DashboardPage() {
                                 const colors = ["green", "blue", "purple", "pink", "yellow"];
                                 const colorIndex = exam.subject.charCodeAt(0) % colors.length;
                                 const subjectTag = `bg-${colors[colorIndex]}-100 text-${colors[colorIndex]}-800 border border-${colors[colorIndex]}-200`;
-                                const categoryTag = getCategoryColor(exam.category);
 
                                 return (
                                     <div key={exam.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden transition-all hover:shadow-md relative group">
-                                        <div className="absolute top-3 right-3 z-10">
+                                        <div className="absolute top-3 right-3 z-10 flex space-x-2">
                                             <button
                                                 className="text-gray-400 hover:text-yellow-500 transition-all p-1.5 bg-white rounded-full shadow-sm border border-gray-100"
                                                 onClick={() => (exam.isBookmarked ? unbookmarkExam(exam.id) : bookmarkExam(exam.id))}
                                             >
                                                 <FiBookmark className={`h-5 w-5 ${exam.isBookmarked ? "text-yellow-500 fill-yellow-500" : ""}`} />
                                             </button>
+                                            <button
+                                                className="text-gray-400 hover:text-red-500 transition-all p-1.5 bg-white rounded-full shadow-sm border border-gray-100"
+                                                onClick={() => removeExam(exam.id)}
+                                            >
+                                                <FiTrash2 className="h-5 w-5" />
+                                            </button>
                                         </div>
                                         <div className="p-5">
                                             <div className="flex items-start mb-4 space-x-2">
                                                 <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${subjectTag}`}>{exam.subject.substring(0, 3).toUpperCase()}</span>
-                                                <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${categoryTag}`}>{exam.category}</span>
                                             </div>
                                             <h3 className="font-semibold text-lg mb-3 text-gray-900">{exam.name}</h3>
                                             <div className="flex items-center text-sm text-gray-500 mb-4">
@@ -628,7 +599,7 @@ export default function DashboardPage() {
                             <FiFileText className="h-16 w-16 mx-auto text-gray-300 mb-4" />
                             <h3 className="text-xl font-medium text-gray-700 mb-2">No exams found</h3>
                             <p className="text-gray-500 max-w-md mx-auto mb-6">
-                                {searchQuery || filterCategory !== "all"
+                                {searchQuery
                                     ? "No exams match your search criteria. Try adjusting your filters."
                                     : "Create your first exam by clicking the 'Create New Exam' button."}
                             </p>
@@ -640,13 +611,7 @@ export default function DashboardPage() {
                             </button>
                         </div>
                     )}
-                    {filteredExams.length > 0 && (
-                        <div className="flex justify-center mt-8">
-                            <button className="px-6 py-2.5 bg-white text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-50 focus:outline-none transition-all border border-gray-200 shadow-sm">
-                                View All Papers
-                            </button>
-                        </div>
-                    )}
+                
                 </div>
 
                 {/* Recent Attempts */}
@@ -831,29 +796,6 @@ export default function DashboardPage() {
                                                 {...register("subject")}
                                             />
                                             {errors.subject && <p className="mt-1.5 text-sm text-red-600">{errors.subject.message}</p>}
-                                        </div>
-
-                                        <div>
-                                            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1.5">
-                                                Category
-                                            </label>
-                                            <div className="relative">
-                                                <select
-                                                    id="category"
-                                                    className={`w-full appearance-none px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent pr-10 ${
-                                                        errors.category ? "border-red-300 bg-red-50" : "border-gray-300"
-                                                    }`}
-                                                    {...register("category")}
-                                                >
-                                                    <option value="Exam">Exam</option>
-                                                    <option value="Quiz">Quiz</option>
-                                                    <option value="Practice">Practice</option>
-                                                </select>
-                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
-                                                    <FiChevronDown className="h-4 w-4" />
-                                                </div>
-                                            </div>
-                                            {errors.category && <p className="mt-1.5 text-sm text-red-600">{errors.category.message}</p>}
                                         </div>
 
                                         <div>
