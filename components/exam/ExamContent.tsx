@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, Suspense } from "react";
+import React, { useEffect, memo, Suspense } from "react";
 import { FiArrowLeft, FiArrowRight, FiCheck, FiClock, FiSkipForward } from "react-icons/fi";
 import { useExamStore } from "@/store/examStore";
 import { useTimer } from "@/hooks/useTimer";
@@ -9,22 +9,13 @@ import QuestionOption from "./QuestionOption";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
 
-const Timer = () => {
-    const { elapsedTime } = useQuestionTimer();
-    return (
-        <div className="text-sm text-gray-600 mb-6">
-            Time spent on this question: <span>{elapsedTime}</span> seconds
-        </div>
-    );
-};
-
-const MarkdownContent = ({ content }: { content: string }) => {
+const MarkdownContent = memo(({ content }: { content: string }) => {
     return (
         <div className="markdown-content">
             <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(content)) }}></div>
         </div>
     );
-};
+});
 
 const ExamContent: React.FC = () => {
     const { examData, currentQuestion, userAnswers, skippedQuestions, navigateToQuestion, submitAnswer, skipQuestion, submitExam, sidebarVisible } = useExamStore();
@@ -35,6 +26,7 @@ const ExamContent: React.FC = () => {
     const isLastQuestion = currentQuestion === examData.questions.length - 1;
     const isFirstQuestion = currentQuestion === 0;
     const hasAnswer = userAnswers[currentQuestion] !== null || skippedQuestions[currentQuestion];
+    const { elapsedTime } = useQuestionTimer();
 
     useEffect(() => {
         if (!sidebarVisible) {
@@ -67,7 +59,9 @@ const ExamContent: React.FC = () => {
 
                     <MarkdownContent content={question.question} />
 
-                    <Timer />
+                    <div className="text-sm text-gray-600 mb-6">
+                        Time spent on this question: <span>{elapsedTime}</span> seconds
+                    </div>
 
                     <form>
                         <div className="space-y-3">

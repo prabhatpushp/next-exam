@@ -58,7 +58,7 @@ export const useDashboardStore = create<DashboardState>()(
                     exams: state.exams.map((exam) => (exam.id === id ? { ...exam, isBookmarked: false } : exam)),
                 })),
 
-            addBookmarkedQuestion: (question) =>
+            addBookmarkedQuestion: (question: BookmarkedQuestion) =>
                 set((state) => ({
                     bookmarkedQuestions: [...state.bookmarkedQuestions, question],
                 })),

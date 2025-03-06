@@ -1,19 +1,35 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Chart from "chart.js/auto";
 import { useExamStore } from "@/store/examStore";
+import { useDashboardStore } from "@/store/dashboardStore";
+import { BookmarkedQuestion, Question } from "@/types/examTypes";
+import { FaCheck, FaTimes, FaBookmark, FaRegBookmark, FaRedo, FaArrowLeft, FaClock, FaChartBar, FaRegClock, FaRegCheckCircle } from "react-icons/fa";
 
 const ResultsScreen: React.FC = () => {
     const { examData, results, userAnswers, skippedQuestions, questionTimes, retakeExam } = useExamStore();
+    const { addBookmarkedQuestion, removeBookmarkedQuestion, bookmarkedQuestions } = useDashboardStore();
+
+    // State to track bookmarked questions locally
+    const [bookmarkedState, setBookmarkedState] = useState<Record<string, boolean>>({});
 
     const statusChartRef = useRef<HTMLCanvasElement>(null);
     const timeChartRef = useRef<HTMLCanvasElement>(null);
-    const categoryChartRef = useRef<HTMLCanvasElement>(null);
 
     const chartInstancesRef = useRef<{
         statusChart?: Chart;
         timeChart?: Chart;
-        categoryChart?: Chart;
     }>({});
+
+    // Initialize bookmarked state from store
+    useEffect(() => {
+        if (bookmarkedQuestions && examData) {
+            const initialState: Record<string, boolean> = {};
+            examData.questions.forEach((question) => {
+                initialState[question.id] = bookmarkedQuestions.some((bq) => bq.questionId === question.id);
+            });
+            setBookmarkedState(initialState);
+        }
+    }, [bookmarkedQuestions, examData]);
 
     useEffect(() => {
         if (!results) return;
@@ -31,32 +47,36 @@ const ResultsScreen: React.FC = () => {
                         {
                             data: [results.correctCount, results.incorrectCount, results.skippedCount],
                             backgroundColor: ["#10b981", "#ef4444", "#f59e0b"],
-                            borderWidth: 1,
+                            borderWidth: 0,
+                            hoverOffset: 5,
                         },
                     ],
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: "70%",
+                    cutout: "75%",
                     plugins: {
                         legend: {
-                            position: "right",
-                            labels: {
-                                font: { family: "Inter", size: 12 },
-                                padding: 20,
-                            },
+                            display: false,
                         },
-                        title: {
-                            display: true,
-                            text: "Question Performance",
-                            font: {
-                                family: "Inter",
+                        tooltip: {
+                            padding: 12,
+                            backgroundColor: "rgba(17, 24, 39, 0.9)",
+                            titleFont: {
                                 size: 14,
                                 weight: "bold",
                             },
-                            padding: {
-                                bottom: 20,
+                            bodyFont: {
+                                size: 13,
+                            },
+                            callbacks: {
+                                label: function (context) {
+                                    const value = context.raw as number;
+                                    const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0) as number;
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${context.label}: ${value} (${percentage}%)`;
+                                },
                             },
                         },
                     },
@@ -64,7 +84,7 @@ const ResultsScreen: React.FC = () => {
             });
         }
 
-        // Time Analysis Chart
+        // Time Analysis Chart - Fixed to show correct time values
         if (timeChartRef.current) {
             const questionLabels = Array.from({ length: examData.questions.length }, (_, i) => `Q${i + 1}`);
 
@@ -74,12 +94,26 @@ const ResultsScreen: React.FC = () => {
                     labels: questionLabels,
                     datasets: [
                         {
-                            label: "Time Spent (seconds)",
-                            data: questionTimes.map((time) => Math.round(time)),
-                            backgroundColor: "rgba(59, 130, 246, 0.6)",
-                            borderColor: "rgba(59, 130, 246, 1)",
+                            label: "Time (seconds)",
+                            data: questionTimes,
+                            backgroundColor: (context) => {
+                                const index = context.dataIndex;
+                                const isCorrect = userAnswers[index] === examData.questions[index].correct_answer;
+                                const isSkipped = skippedQuestions[index];
+
+                                if (isSkipped) return "rgba(245, 158, 11, 0.7)";
+                                return isCorrect ? "rgba(16, 185, 129, 0.7)" : "rgba(239, 68, 68, 0.7)";
+                            },
+                            borderColor: (context) => {
+                                const index = context.dataIndex;
+                                const isCorrect = userAnswers[index] === examData.questions[index].correct_answer;
+                                const isSkipped = skippedQuestions[index];
+
+                                if (isSkipped) return "rgb(245, 158, 11)";
+                                return isCorrect ? "rgb(16, 185, 129)" : "rgb(239, 68, 68)";
+                            },
                             borderWidth: 1,
-                            borderRadius: 4,
+                            borderRadius: 6,
                         },
                     ],
                 },
@@ -87,23 +121,33 @@ const ResultsScreen: React.FC = () => {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        title: {
-                            display: true,
-                            text: "Time Spent per Question",
-                            font: {
-                                family: "Inter",
+                        legend: {
+                            display: false,
+                        },
+                        tooltip: {
+                            backgroundColor: "rgba(17, 24, 39, 0.9)",
+                            titleFont: {
                                 size: 14,
                                 weight: "bold",
                             },
-                            padding: {
-                                bottom: 20,
+                            bodyFont: {
+                                size: 13,
                             },
-                        },
-                        legend: {
-                            labels: {
-                                font: {
-                                    family: "Inter",
-                                    size: 12,
+                            callbacks: {
+                                title: function (tooltipItems) {
+                                    return `Question ${tooltipItems[0].dataIndex + 1}`;
+                                },
+                                label: function (context) {
+                                    const index = context.dataIndex;
+                                    const timeValue = context.raw as number;
+                                    const isCorrect = userAnswers[index] === examData.questions[index].correct_answer;
+                                    const isSkipped = skippedQuestions[index];
+
+                                    let status = "";
+                                    if (isSkipped) status = "• Skipped";
+                                    else status = isCorrect ? "• Correct" : "• Incorrect";
+
+                                    return [`Time: ${displayTime(timeValue)}`, status];
                                 },
                             },
                         },
@@ -113,104 +157,38 @@ const ResultsScreen: React.FC = () => {
                             beginAtZero: true,
                             title: {
                                 display: true,
-                                text: "Seconds",
+                                text: "Time (seconds)",
                                 font: {
-                                    family: "Inter",
+                                    family: "'Inter', sans-serif",
                                     size: 12,
+                                    weight: "500",
                                 },
+                                color: "#64748b",
                             },
                             ticks: {
                                 font: {
-                                    family: "Inter",
+                                    family: "'Inter', sans-serif",
                                     size: 11,
                                 },
+                                color: "#94a3b8",
+                                callback: function (value) {
+                                    return value + "s";
+                                },
+                            },
+                            grid: {
+                                color: "rgba(0, 0, 0, 0.05)",
                             },
                         },
                         x: {
                             ticks: {
                                 font: {
-                                    family: "Inter",
+                                    family: "'Inter', sans-serif",
                                     size: 11,
                                 },
+                                color: "#94a3b8",
                             },
-                        },
-                    },
-                },
-            });
-        }
-
-        // Category Performance Chart
-        if (categoryChartRef.current) {
-            // Group questions by category and calculate performance for each
-            const categories: Record<string, { total: number; correct: number }> = {};
-
-            examData.questions.forEach((question, index) => {
-                if (!categories[question.category]) {
-                    categories[question.category] = { total: 0, correct: 0 };
-                }
-
-                categories[question.category].total++;
-
-                if (userAnswers[index] === question.correct_answer) {
-                    categories[question.category].correct++;
-                }
-            });
-
-            const categoryLabels = Object.keys(categories);
-            const categoryData = categoryLabels.map((category) => {
-                const { total, correct } = categories[category];
-                return (correct / total) * 100;
-            });
-
-            chartInstancesRef.current.categoryChart = new Chart(categoryChartRef.current, {
-                type: "radar",
-                data: {
-                    labels: categoryLabels,
-                    datasets: [
-                        {
-                            label: "Your Performance",
-                            data: categoryData,
-                            fill: true,
-                            backgroundColor: "rgba(59, 130, 246, 0.2)",
-                            borderColor: "rgba(59, 130, 246, 1)",
-                            pointBackgroundColor: "rgba(59, 130, 246, 1)",
-                            pointBorderColor: "#fff",
-                            pointHoverBackgroundColor: "#fff",
-                            pointHoverBorderColor: "rgba(59, 130, 246, 1)",
-                        },
-                    ],
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    elements: {
-                        line: {
-                            borderWidth: 2,
-                        },
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: "Performance by Category",
-                            font: {
-                                family: "Inter",
-                                size: 14,
-                                weight: "bold",
-                            },
-                            padding: {
-                                bottom: 20,
-                            },
-                        },
-                    },
-                    scales: {
-                        r: {
-                            angleLines: {
-                                display: true,
-                            },
-                            suggestedMin: 0,
-                            suggestedMax: 100,
-                            ticks: {
-                                stepSize: 20,
+                            grid: {
+                                display: false,
                             },
                         },
                     },
@@ -222,149 +200,313 @@ const ResultsScreen: React.FC = () => {
             // Cleanup charts on unmount
             Object.values(chartInstancesRef.current).forEach((chart) => chart?.destroy());
         };
-    }, [results, examData, questionTimes, userAnswers]);
+    }, [results, examData, questionTimes, userAnswers, skippedQuestions]);
 
     if (!results) return null;
 
-    const formatTime = (seconds: number) => {
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = Math.floor(seconds % 60);
-        return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+    // Utility function to display time in the most appropriate format
+    const displayTime = (seconds: number) => {
+        if (seconds < 60) {
+            return `${Math.round(seconds)}s`;
+        } else {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.round(seconds % 60);
+            return `${minutes}m ${remainingSeconds}s`;
+        }
+    };
+
+    // Calculate accuracy correctly
+    const calculateAccuracy = () => {
+        const total = results.correctCount + results.incorrectCount;
+        if (total === 0) return 0;
+        return Math.round((results.correctCount / total) * 100);
+    };
+
+    const toggleBookmark = (question: Question) => {
+        const isCurrentlyBookmarked = bookmarkedState[question.id] || false;
+
+        // Update local state immediately for responsive UI
+        setBookmarkedState((prev) => ({
+            ...prev,
+            [question.id]: !isCurrentlyBookmarked,
+        }));
+
+        if (isCurrentlyBookmarked) {
+            // Remove from bookmarks
+            removeBookmarkedQuestion(question.id);
+        } else {
+            // Add to bookmarks
+            const bookmarkedQuestion: BookmarkedQuestion = {
+                id: question.id,
+                examId: examData.id,
+                examName: examData.name,
+                questionId: question.id,
+                question: question.question,
+                options: question.options,
+                correct_answer: question.correct_answer,
+                bookmarkedAt: Date.now(),
+            };
+            addBookmarkedQuestion(bookmarkedQuestion);
+        }
+    };
+
+    // Calculate average time per question
+    const calculateAverageTime = () => {
+        if (!questionTimes.length) return 0;
+        return questionTimes.reduce((sum, time) => sum + time, 0) / questionTimes.length;
     };
 
     return (
-        <div className="flex-1 flex flex-col bg-gray-50 overflow-y-auto">
-            <div className="p-6">
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-white rounded-xl shadow-sm p-8 mb-6">
-                        <div className="text-center mb-8">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-2">Exam Results</h2>
-                            <p className="text-gray-600">Here's how you performed on the Business Budgeting exam</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <div className="bg-blue-50 p-6 text-center rounded-lg">
-                                <div className="text-blue-600 text-lg font-medium mb-1">Score</div>
-                                <div className="text-3xl font-bold text-gray-800">
-                                    {results.score}/{results.maxScore}
+        <div className="flex-1 flex flex-col bg-slate-50 overflow-y-auto">
+            <div className="p-4 sm:p-6">
+                <div className="max-w-5xl mx-auto">
+                    {/* Combined Results & Analysis Section */}
+                    <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
+                        {/* Header with gradient - more compact and polished */}
+                        <div className="bg-gradient-to-r from-indigo-600 to-blue-600 py-5 px-6">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <h2 className="text-xl font-bold text-white">{examData.name}</h2>
+                                    <div className="flex items-center mt-1 text-indigo-100 text-xs">
+                                        <FaRegClock className="mr-1" size={12} />
+                                        <span>Completed on {new Date().toLocaleDateString()}</span>
+                                    </div>
                                 </div>
-                                <div className="text-sm text-gray-500 mt-1">{results.percentage}% correct</div>
-                            </div>
-
-                            <div className="bg-green-50 p-6 text-center rounded-lg">
-                                <div className="text-green-600 text-lg font-medium mb-1">Time</div>
-                                <div className="text-3xl font-bold text-gray-800">{formatTime(results.timeSpent)}</div>
-                                <div className="text-sm text-gray-500 mt-1">Minutes spent</div>
-                            </div>
-
-                            <div className="bg-purple-50 p-6 text-center rounded-lg">
-                                <div className="text-purple-600 text-lg font-medium mb-1">Mastery</div>
-                                <div className="text-3xl font-bold text-gray-800">{results.masteryLevel}</div>
-                                <div className="text-sm text-gray-500 mt-1">Keep it up!</div>
+                                <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center">
+                                    <div className="text-center">
+                                        <div className="text-3xl font-bold text-white">{results.percentage}%</div>
+                                        <div className="text-indigo-100 text-xs uppercase tracking-wider">Score</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="mb-4">
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-sm font-medium text-gray-700">Overall Performance</span>
-                                <span className="text-sm font-medium text-gray-700">{results.percentage}%</span>
+                        {/* Performance stats and charts - beautifully organized */}
+                        <div className="p-6">
+                            {/* Stats Cards - more compact and beautiful */}
+                            <div className="grid grid-cols-3 gap-4 mb-6">
+                                <div className="bg-white rounded-lg p-4 flex items-center shadow-sm border border-slate-100">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-100 text-indigo-600 mr-3">
+                                        <FaChartBar size={16} />
+                                    </div>
+                                    <div>
+                                        <div className="text-slate-500 text-xs font-medium">Score</div>
+                                        <div className="text-lg font-bold text-slate-800">
+                                            {results.score}/{results.maxScore}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-lg p-4 flex items-center shadow-sm border border-slate-100">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-100 text-blue-600 mr-3">
+                                        <FaClock size={16} />
+                                    </div>
+                                    <div>
+                                        <div className="text-slate-500 text-xs font-medium">Time Spent</div>
+                                        <div className="text-lg font-bold text-slate-800">{displayTime(results.timeSpent)}</div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-lg p-4 flex items-center shadow-sm border border-slate-100">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600 mr-3">
+                                        <FaRegCheckCircle size={16} />
+                                    </div>
+                                    <div>
+                                        <div className="text-slate-500 text-xs font-medium">Accuracy</div>
+                                        <div className="text-lg font-bold text-slate-800">{calculateAccuracy()}%</div>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                                <div
-                                    className={`h-2.5 rounded-full ${
-                                        results.percentage >= 80 ? "bg-green-600" : results.percentage >= 60 ? "bg-blue-600" : results.percentage >= 40 ? "bg-yellow-500" : "bg-red-600"
-                                    }`}
-                                    style={{ width: `${results.percentage}%` }}
-                                ></div>
+
+                            {/* Beautiful Performance Charts Section */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                {/* Question Status Chart */}
+                                <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h3 className="text-sm font-medium text-slate-800 flex items-center">
+                                            <FaRegCheckCircle className="mr-2 text-indigo-600" size={14} />
+                                            Results Breakdown
+                                        </h3>
+                                    </div>
+
+                                    <div className="relative">
+                                        <div className="h-52">
+                                            <canvas ref={statusChartRef}></canvas>
+                                        </div>
+
+                                        {/* Center text inside doughnut */}
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                            <div className="text-3xl font-bold text-slate-800">{results.percentage}%</div>
+                                            <div className="text-xs text-slate-500">Overall Score</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Unified legend */}
+                                    <div className="mt-3 flex justify-center space-x-4 text-xs">
+                                        <div className="flex items-center">
+                                            <div className="w-3 h-3 rounded-full bg-green-500 mr-1"></div>
+                                            <span className="text-slate-600">Correct ({results.correctCount})</span>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <div className="w-3 h-3 rounded-full bg-red-500 mr-1"></div>
+                                            <span className="text-slate-600">Incorrect ({results.incorrectCount})</span>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <div className="w-3 h-3 rounded-full bg-amber-500 mr-1"></div>
+                                            <span className="text-slate-600">Skipped ({results.skippedCount})</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Time Analysis Chart */}
+                                <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h3 className="text-sm font-medium text-slate-800 flex items-center">
+                                            <FaClock className="mr-2 text-indigo-600" size={14} />
+                                            Time per Question
+                                        </h3>
+                                        <div className="text-xs text-slate-500 font-medium bg-slate-50 px-2 py-1 rounded-md">Avg: {displayTime(calculateAverageTime())}</div>
+                                    </div>
+                                    <div className="h-60">
+                                        <canvas ref={timeChartRef}></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex flex-wrap gap-4 justify-center">
+                                <button
+                                    onClick={retakeExam}
+                                    className="px-5 py-2 bg-indigo-600 text-white font-medium rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all flex items-center justify-center"
+                                >
+                                    <FaRedo className="mr-2" size={14} />
+                                    Retake Exam
+                                </button>
+
+                                <button
+                                    onClick={retakeExam} // In a real app, this would navigate back to the course
+                                    className="px-5 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 transition-all flex items-center justify-center"
+                                >
+                                    <FaArrowLeft className="mr-2" size={14} />
+                                    Back to Course
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    {/* Performance Charts */}
-                    <div className="bg-white rounded-xl shadow-sm p-8 mb-6">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-6">Performance Analysis</h3>
+                    {/* Question Analysis */}
+                    <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+                        <h3 className="text-lg font-semibold text-slate-800 mb-6 flex items-center">
+                            <FaChartBar className="mr-2 text-indigo-600" />
+                            Question Analysis
+                        </h3>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {/* Question Status Chart */}
-                            <div className="h-60">
-                                <canvas ref={statusChartRef}></canvas>
-                            </div>
-
-                            {/* Time Analysis Chart */}
-                            <div className="h-60">
-                                <canvas ref={timeChartRef}></canvas>
-                            </div>
-                        </div>
-
-                        {/* Category Performance Chart */}
-                        <div className="h-60 mt-8">
-                            <canvas ref={categoryChartRef}></canvas>
-                        </div>
-                    </div>
-
-                    {/* Detailed Question Analysis */}
-                    <div className="bg-white rounded-xl shadow-sm p-8 mb-6">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-6">Question Analysis</h3>
-
-                        <div className="space-y-6">
+                        <div className="space-y-4">
                             {examData.questions.map((question, index) => {
                                 const isSkipped = skippedQuestions[index];
                                 const isCorrect = !isSkipped && userAnswers[index] === question.correct_answer;
                                 const isIncorrect = !isSkipped && userAnswers[index] !== null && userAnswers[index] !== question.correct_answer;
-
-                                const borderColorClass = isCorrect ? "border-green-500" : isSkipped ? "border-yellow-500" : "border-red-500";
-                                const bgColorClass = isCorrect ? "bg-green-50" : isSkipped ? "bg-yellow-50" : "bg-red-50";
+                                const isBookmarked = bookmarkedState[question.id] || false;
 
                                 return (
-                                    <div key={index} className={`border-l-4 ${borderColorClass} ${bgColorClass} p-5 rounded-r-md`}>
-                                        <div className="flex justify-between items-start mb-3">
-                                            <h4 className="text-md font-medium text-gray-800">Question {index + 1}</h4>
-                                            <div className="flex items-center space-x-3">
-                                                <span className="text-sm text-gray-500">{Math.round(questionTimes[index])} seconds</span>
-                                                <span
-                                                    className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                                        isCorrect ? "bg-green-100 text-green-800" : isSkipped ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800"
+                                    <div key={index} className="border border-slate-200 rounded-lg overflow-hidden transition-all hover:shadow-md">
+                                        <div
+                                            className={`p-4 flex justify-between items-center ${
+                                                isCorrect ? "bg-green-50 border-b border-green-100" : isSkipped ? "bg-amber-50 border-b border-amber-100" : "bg-red-50 border-b border-red-100"
+                                            }`}
+                                        >
+                                            <div className="flex items-center">
+                                                <div
+                                                    className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                                                        isCorrect ? "bg-green-100 text-green-600" : isSkipped ? "bg-amber-100 text-amber-600" : "bg-red-100 text-red-600"
                                                     }`}
                                                 >
-                                                    {isCorrect ? "Correct" : isSkipped ? "Skipped" : "Incorrect"}
+                                                    {isCorrect ? <FaCheck className="text-sm" /> : isSkipped ? <FaClock className="text-sm" /> : <FaTimes className="text-sm" />}
+                                                </div>
+                                                <h4 className="font-medium text-slate-800">Question {index + 1}</h4>
+                                            </div>
+                                            <div className="flex items-center space-x-3">
+                                                {/* Fixed time display */}
+                                                <span className="text-sm text-slate-500 flex items-center">
+                                                    <FaClock className="mr-1 text-slate-400" size={14} />
+                                                    {displayTime(questionTimes[index])}
                                                 </span>
+
+                                                {/* Enhanced Bookmark Toggle Button */}
+                                                <button
+                                                    onClick={() => toggleBookmark(question)}
+                                                    className={`relative group transition-all duration-200 ${
+                                                        isBookmarked ? "bg-indigo-100 text-indigo-600 hover:bg-indigo-200" : "bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
+                                                    } w-9 h-9 rounded-full flex items-center justify-center shadow-sm overflow-hidden`}
+                                                    title={isBookmarked ? "Remove bookmark" : "Bookmark question"}
+                                                >
+                                                    {isBookmarked ? (
+                                                        <>
+                                                            <FaBookmark className="text-indigo-600 z-10" size={14} />
+                                                            <span className="absolute inset-0 bg-indigo-100 transform scale-100 group-hover:scale-0 transition-transform duration-200 rounded-full"></span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <FaRegBookmark className="z-10" size={14} />
+                                                            <span className="absolute inset-0 bg-indigo-100 transform scale-0 group-hover:scale-100 transition-transform duration-200 rounded-full"></span>
+                                                        </>
+                                                    )}
+                                                </button>
                                             </div>
                                         </div>
-                                        <p className="text-gray-700 mb-4">{question.question}</p>
-                                        <div className="space-y-2 text-sm">
-                                            {!isSkipped && (
-                                                <div className="flex items-start">
-                                                    <span className="font-medium text-gray-700 mr-2 min-w-[100px]">Your answer:</span>
-                                                    <span className={`font-medium ${isCorrect ? "text-green-600" : "text-red-600"}`}>{userAnswers[index] || "Not answered"}</span>
-                                                </div>
-                                            )}
-                                            {(isIncorrect || isSkipped) && (
-                                                <div className="flex items-start">
-                                                    <span className="font-medium text-gray-700 mr-2 min-w-[100px]">Correct answer:</span>
-                                                    <span className="text-green-600 font-medium">{question.correct_answer}</span>
-                                                </div>
-                                            )}
+
+                                        <div className="p-4">
+                                            <p className="text-slate-800 mb-4">{question.question}</p>
+
+                                            {/* Options */}
+                                            <div className="space-y-2 mb-2">
+                                                {question.options.map((option, optIndex) => {
+                                                    const isUserAnswer = userAnswers[index] === option;
+                                                    const isCorrectAnswer = question.correct_answer === option;
+
+                                                    let optionClass = "p-3 rounded-md flex items-center text-sm";
+
+                                                    if (isUserAnswer && isCorrectAnswer) {
+                                                        // User selected correct answer
+                                                        optionClass += " bg-green-50 border border-green-200 text-green-800";
+                                                    } else if (isUserAnswer && !isCorrectAnswer) {
+                                                        // User selected wrong answer
+                                                        optionClass += " bg-red-50 border border-red-200 text-red-800";
+                                                    } else if (isCorrectAnswer) {
+                                                        // Correct answer not selected by user
+                                                        optionClass += " bg-green-50 border border-green-200 text-green-800";
+                                                    } else {
+                                                        // Normal option
+                                                        optionClass += " bg-slate-50 border border-slate-200 text-slate-700";
+                                                    }
+
+                                                    return (
+                                                        <div key={optIndex} className={optionClass}>
+                                                            <div
+                                                                className={`w-5 h-5 rounded-full flex items-center justify-center mr-3 flex-shrink-0 ${
+                                                                    isUserAnswer && isCorrectAnswer
+                                                                        ? "bg-green-200"
+                                                                        : isUserAnswer && !isCorrectAnswer
+                                                                        ? "bg-red-200"
+                                                                        : isCorrectAnswer
+                                                                        ? "bg-green-200"
+                                                                        : "bg-slate-200"
+                                                                }`}
+                                                            >
+                                                                {isUserAnswer && isCorrectAnswer && <FaCheck className="text-xs text-green-700" />}
+                                                                {isUserAnswer && !isCorrectAnswer && <FaTimes className="text-xs text-red-700" />}
+                                                                {!isUserAnswer && isCorrectAnswer && <FaCheck className="text-xs text-green-700" />}
+                                                            </div>
+                                                            {option}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
                                     </div>
                                 );
                             })}
                         </div>
-                    </div>
-
-                    <div className="mt-8 text-center">
-                        <button
-                            onClick={retakeExam}
-                            className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all mr-4"
-                        >
-                            Retake Exam
-                        </button>
-
-                        <button
-                            onClick={retakeExam} // In a real app, this would navigate back to the course
-                            className="px-6 py-3 bg-white border border-gray-300 text-gray-700 font-medium rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all"
-                        >
-                            Back to Course
-                        </button>
                     </div>
                 </div>
             </div>
